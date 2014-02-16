@@ -23,24 +23,18 @@
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from qgis.core import *
-from qgis.gui import QgsMessageBar, QgsMapToolEmitPoint
+from qgis.gui import QgsMessageBar, QgsMapToolEmitPoint, QgsMapToolPan
 # Initialize Qt resources from file resources.py
 import resources
 # Import the code for the dialog
 from converter_dialog import ConverterDialog
-from os import listdir, path, getenv
+from os import listdir, path, getenv, getcwd
 #import from others
-from iSimShapefileIO import TAGS
+import shutil
+from xmlToShapefile import XmlToShapefile
+from actionHandler import ActionHandler
 
 class iSimGis:
-
-    @staticmethod
-    def getSHTagFromFilename(filename):
-        suffix = filename.split("_")
-        for typeid, tag in TAGS.iteritems():
-            if suffix == tag:
-                return typeid
-        return 0
 
     def __init__(self, iface):
         # Save reference to the QGIS interface
@@ -49,6 +43,8 @@ class iSimGis:
         self.canvas = self.iface.mapCanvas() 
         # this QGIS tool emits as QgsPoint after each click on the map canvas
         self.clickTool = QgsMapToolEmitPoint(self.canvas)
+        # create a pan tool
+        self.toolPan = QgsMapToolPan(self.canvas)
         #comverter dialog
         self.converterdlg = None
         # initialize plugin directory
@@ -62,43 +58,51 @@ class iSimGis:
             if qVersion() > '4.3.3':
                 QCoreApplication.installTranslator(self.translator)
         QSettings().setValue( "/Projections/defaultBehaviour", "useGlobal" )
+        # crs
+        self.crs = QgsCoordinateReferenceSystem(3168)
 
     def initGui(self):
 
+        self.new_action = QAction(
+            QIcon(":/plugins/isimgis/icons/notepad-icon.png"),
+            u"create an empty shapefile directory", self.iface.mainWindow())
+
         self.open_action = QAction(
-            QIcon(":/plugins/isimgis/open.png"),
+            QIcon(":/plugins/isimgis/icons/open.png"),
             u"open iSim shapefile directory", self.iface.mainWindow())
 
         self.converter_action = QAction(
-            QIcon(":/plugins/isimgis/converter.png"),
+            QIcon(":/plugins/isimgis/icons/converter.png"),
             u"iSim converter", self.iface.mainWindow())
 
         self.add_action = QAction(
-            QIcon(":/plugins/isimgis/add.png"),
+            QIcon(":/plugins/isimgis/icons/add.png"),
             u"add features to current active layer.", self.iface.mainWindow())
 
         self.delete_action = QAction(
-            QIcon(":/plugins/isimgis/delete.png"),
+            QIcon(":/plugins/isimgis/icons/delete.png"),
             u"delete features from current active layer.", self.iface.mainWindow())
 
         # connect the action to the run method
+        self.new_action.triggered.connect(self.new)
         self.open_action.triggered.connect(self.open)
         self.converter_action.triggered.connect(self.converter)
         self.add_action.triggered.connect(self.addFeature)
         self.delete_action.triggered.connect(self.deleteFeature)
 
         # Add toolbar button and menu item
+        self.iface.addToolBarIcon(self.new_action)
         self.iface.addToolBarIcon(self.open_action)
         self.iface.addToolBarIcon(self.converter_action)
         self.iface.addToolBarIcon(self.add_action)
         self.iface.addToolBarIcon(self.delete_action)
+        self.iface.addPluginToMenu(u"&iSimGis", self.new_action)
         self.iface.addPluginToMenu(u"&iSimGis", self.open_action)
         self.iface.addPluginToMenu(u"&iSimGis", self.converter_action)
         self.iface.addPluginToMenu(u"&iSimGis", self.add_action)
         self.iface.addPluginToMenu(u"&iSimGis", self.delete_action)
 
-        #connect mouse events
-        self.clickTool.canvasClicked.connect(self.handleMouseDown)
+        self.clickTool.canvasClicked.connect(self.addNewFeature)
 
     def unload(self):
         # Remove the plugin menu item and icon
@@ -108,6 +112,25 @@ class iSimGis:
         self.iface.removeToolBarIcon(self.open_action)
         self.iface.removeToolBarIcon(self.converter_action)
         self.iface.removeToolBarIcon(self.add_action)
+
+    def new(self):
+        sh_dir = QFileDialog.getExistingDirectory(None, 'Create new iSim Shapefile Directory', getenv('HOME'))
+        if sh_dir == "":
+            return
+        prefix = path.basename(sh_dir)
+
+        # find the template
+        current_full_path = path.realpath(__file__)
+        current_dir, current_file = path.split(current_full_path)
+        template_dir = path.join(current_dir, "template")
+
+        xml_path = path.join(template_dir, "template.xml")
+        xmlToShapefile = XmlToShapefile(xml_path, sh_dir, ["x", "y"])
+        xmlToShapefile.run()
+
+        # open layer
+        self.open(sh_dir)
+
 
     def open(self, sh_dir):
         if isinstance(sh_dir, bool) or sh_dir == "":
@@ -120,7 +143,7 @@ class iSimGis:
             if path.isfile(full_path) and names[1] == "shp":
                 layer = QgsVectorLayer(full_path, names[0], "ogr")
                 if layer.isValid():
-                    layer.setCrs(QgsCoordinateReferenceSystem(4326))
+                    layer.setCrs(self.crs)
                     QgsMapLayerRegistry.instance().addMapLayer(layer)
 
     # open convert dialog
@@ -133,29 +156,30 @@ class iSimGis:
         self.converterdlg.open_sig.connect(self.open)
         self.converterdlg.show()
         # Run the dialog event loop
-        self.converterdlg.exec_()       
+        self.converterdlg.exec_()
         self.converterdlg = None
 
-    #return isValid, sh_dir, filename 
+    #return isValid, sh_dir, layer_name 
     def checkActiveLayerInfo(self):
         active_layer = self.iface.activeLayer()
         if active_layer is None:
             return False, "", ""
         uri = active_layer.dataProvider().dataSourceUri()
         sh_dir = path.dirname(uri)
-        filename = path.basename(uri).split(".")[0]
+        layer_name = path.basename(uri).split(".")[0]
         data_file = path.join(sh_dir, "data.xml")
         if path.isfile(data_file):
-            return True, sh_dir, filename
+            return True, sh_dir, layer_name
         else:
-            return False, sh_dir, filename
+            return False, sh_dir, layer_name
 
     def addFeature(self):
         # make our clickTool the tool that we'll use for now
         self.canvas.setMapTool(self.clickTool)
-        isValidLayer, sh_dir, filename = self.checkActiveLayerInfo()
+        isValidLayer, sh_dir, layer_name = self.checkActiveLayerInfo()
         if not isValidLayer:
-            QMessageBox.critical(self.iface.mainWindow(),"iSim Error", "The active layer is not iSim shapefile layer.")
+            QMessageBox.critical(self.iface.mainWindow(),"iSim Error", "There is no active layer or the active layer is not iSim shapefile layer.")
+            return
 
         '''
         #self.iface.messageBar().pushMessage("Info", "there is no active layer, so you can not add any feature!", level=QgsMessageBar.CRITICAL)
@@ -170,8 +194,36 @@ class iSimGis:
         '''
         return
 
-    def handleMouseDown(self, point, button):
-        QMessageBox.information( self.iface.mainWindow(),"Info", "X,Y = %s,%s" % (str(point.x()),str(point.y())) )
+    def addNewFeature(self, point, button):
+        QMessageBox.information(self.iface.mainWindow(),"Info", "X,Y = %s,%s" % (str(point.x()),str(point.y())))
+        self.canvas.setMapTool(self.toolPan)
 
     def deleteFeature(self):
-        return
+        # verify the current layer
+        isValidLayer, sh_dir, active_layer_name = self.checkActiveLayerInfo()
+        if not isValidLayer:
+            QMessageBox.critical(self.iface.mainWindow(),"iSim Error", "The active layer is not iSim shapefile layer.")
+            return
+
+        # make sure there is a selected feature
+        active_layer = self.iface.activeLayer()
+        selected_features = active_layer.selectedFeatures()
+        if len(selected_features) == 0:
+            QMessageBox.critical(self.iface.mainWindow(),"iSim Error", "No feature is selected.")
+            return
+
+        # confirm message
+        reply = QMessageBox.question(self.iface.mainWindow(), "Are you sure?", "Are you sure to delete the selected features ? It is NOT possible to undo this action.", 
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No);
+        if reply == QMessageBox.No:
+            return
+
+        handler = ActionHandler(sh_dir, self.canvas)
+        # remove data dependency
+        handler.delete(selected_features)
+        handler.save()
+            
+        self.canvas.refresh()
+        
+
+

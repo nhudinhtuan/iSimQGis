@@ -19,7 +19,6 @@
  *                                                                         *
  ***************************************************************************/
 """
-
 from PyQt4 import QtCore, QtGui
 from ui_converter import Ui_Converter
 from xmlToShapefile import XmlToShapefile
@@ -71,9 +70,11 @@ class ConverterDialog(QtGui.QDialog, Ui_Converter):
 
     def xmlshUpdateProgress(self, value):
         self.xmlsh_progress.setProperty("value", value)
+        QtGui.QApplication.processEvents()
 
     def shxmlUpdateProgress(self, value):
         self.shxml_progress.setProperty("value", value)
+        QtGui.QApplication.processEvents()
 
     def convertXMLToSH(self):
         xml_path = self.xmlsh_xml_path.text()
@@ -82,11 +83,19 @@ class ConverterDialog(QtGui.QDialog, Ui_Converter):
             self.xmlsh_status.setVisible(True)
             self.xmlsh_status.setText("<font color='red'>Please select XML file and destination directory!<font>")
             return
+
+        formula_x = self.xmlsh_formula_x.text()
+        formula_y = self.xmlsh_formula_y.text()
+        if formula_x == "" or formula_y == "":
+            self.xmlsh_status.setVisible(True)
+            self.xmlsh_status.setText("<font color='red'>Please enter the coordinate conversion formular!<font>")
+            return
+
         self.xmlsh_status.setVisible(False)
         self.xmlsh_progress.setVisible(True)
         self.xmlsh_converter_but.setEnabled(False)
         try:
-            xmlToShapefile = XmlToShapefile(xml_path, sh_dir)
+            xmlToShapefile = XmlToShapefile(xml_path, sh_dir, [formula_x, formula_y])
             xmlToShapefile.prog_sig.connect(self.xmlshUpdateProgress)
             xmlToShapefile.run()
         except IOError as e:
@@ -94,6 +103,7 @@ class ConverterDialog(QtGui.QDialog, Ui_Converter):
             self.xmlsh_progress.setVisible(False)
             self.xmlsh_converter_but.setEnabled(True)
             self.xmlsh_status.setText("<font color='red'>Error: %s<font>" % e.strerror)
+
         self.open_sig.emit(sh_dir)
         self.accept()
 
@@ -104,11 +114,19 @@ class ConverterDialog(QtGui.QDialog, Ui_Converter):
             self.shxml_status.setVisible(True)
             self.shxml_status.setText("<font color='red'>Please shape files directory and xml output!<font>")
             return
+
+        formula_x = self.shxml_formula_x.text()
+        formula_y = self.shxml_formula_y.text()
+        if formula_x == "" or formula_y == "":
+            self.shxml_status.setVisible(True)
+            self.shxml_status.setText("<font color='red'>Please enter the coordinate conversion formular!<font>")
+            return
+
         self.shxml_status.setVisible(False)
         self.shxml_progress.setVisible(True)
         self.shxml_converter_but.setEnabled(False)
         try:
-            shapefileToXml = ShapefileToXml(xml_path, sh_dir)
+            shapefileToXml = ShapefileToXml(xml_path, sh_dir, [formula_x, formula_y])
             shapefileToXml.prog_sig.connect(self.shxmlUpdateProgress)
             shapefileToXml.run()
         except IOError as e:

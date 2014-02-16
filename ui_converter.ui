@@ -9,9 +9,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>656</width>
-    <height>283</height>
+    <width>701</width>
+    <height>300</height>
    </rect>
+  </property>
+  <property name="font">
+   <font>
+    <family>Tahoma</family>
+    <pointsize>12</pointsize>
+   </font>
   </property>
   <property name="contextMenuPolicy">
    <enum>Qt::DefaultContextMenu</enum>
@@ -34,20 +40,20 @@
   <widget class="QTabWidget" name="tabWidget">
    <property name="geometry">
     <rect>
-     <x>0</x>
+     <x>20</x>
      <y>10</y>
      <width>661</width>
-     <height>281</height>
+     <height>271</height>
     </rect>
    </property>
    <property name="font">
     <font>
      <family>Tahoma</family>
-     <pointsize>10</pointsize>
+     <pointsize>13</pointsize>
     </font>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="XMLtoSH">
     <attribute name="title">
@@ -56,14 +62,19 @@
     <widget class="QLabel" name="xmlsh_xml_label">
      <property name="geometry">
       <rect>
-       <x>20</x>
-       <y>20</y>
+       <x>10</x>
+       <y>10</y>
        <width>131</width>
-       <height>31</height>
+       <height>41</height>
       </rect>
      </property>
+     <property name="font">
+      <font>
+       <pointsize>13</pointsize>
+      </font>
+     </property>
      <property name="text">
-      <string>iSim XML File :</string>
+      <string>iSim XML File</string>
      </property>
     </widget>
     <widget class="QLineEdit" name="xmlsh_sh_path">
@@ -72,24 +83,29 @@
      </property>
      <property name="geometry">
       <rect>
-       <x>150</x>
-       <y>71</y>
-       <width>421</width>
-       <height>31</height>
+       <x>120</x>
+       <y>60</y>
+       <width>471</width>
+       <height>21</height>
       </rect>
      </property>
     </widget>
     <widget class="QLabel" name="xmlsh_sh_label">
      <property name="geometry">
       <rect>
-       <x>20</x>
-       <y>80</y>
+       <x>10</x>
+       <y>50</y>
        <width>131</width>
-       <height>16</height>
+       <height>41</height>
       </rect>
      </property>
+     <property name="font">
+      <font>
+       <pointsize>13</pointsize>
+      </font>
+     </property>
      <property name="text">
-      <string>Destination Dir :</string>
+      <string>Destination Dir</string>
      </property>
     </widget>
     <widget class="QLineEdit" name="xmlsh_xml_path">
@@ -98,20 +114,20 @@
      </property>
      <property name="geometry">
       <rect>
-       <x>150</x>
+       <x>120</x>
        <y>20</y>
-       <width>421</width>
-       <height>31</height>
+       <width>471</width>
+       <height>21</height>
       </rect>
      </property>
     </widget>
     <widget class="QToolButton" name="xmlsh_sh_browser">
      <property name="geometry">
       <rect>
-       <x>580</x>
-       <y>71</y>
-       <width>41</width>
-       <height>31</height>
+       <x>610</x>
+       <y>60</y>
+       <width>31</width>
+       <height>21</height>
       </rect>
      </property>
      <property name="text">
@@ -121,23 +137,23 @@
     <widget class="QToolButton" name="xmlsh_xml_browser">
      <property name="geometry">
       <rect>
-       <x>580</x>
+       <x>610</x>
        <y>20</y>
-       <width>41</width>
-       <height>31</height>
+       <width>31</width>
+       <height>21</height>
       </rect>
      </property>
      <property name="text">
-      <string> ...</string>
+      <string>...</string>
      </property>
     </widget>
     <widget class="QPushButton" name="xmlsh_converter_but">
      <property name="geometry">
       <rect>
-       <x>230</x>
-       <y>130</y>
+       <x>240</x>
+       <y>154</y>
        <width>181</width>
-       <height>31</height>
+       <height>35</height>
       </rect>
      </property>
      <property name="text">
@@ -148,7 +164,7 @@
      <property name="geometry">
       <rect>
        <x>50</x>
-       <y>190</y>
+       <y>205</y>
        <width>561</width>
        <height>23</height>
       </rect>
@@ -160,16 +176,16 @@
     <widget class="QLabel" name="xmlsh_status">
      <property name="geometry">
       <rect>
-       <x>20</x>
-       <y>190</y>
-       <width>611</width>
+       <x>30</x>
+       <y>205</y>
+       <width>601</width>
        <height>21</height>
       </rect>
      </property>
      <property name="font">
       <font>
        <family>Tahoma</family>
-       <pointsize>10</pointsize>
+       <pointsize>13</pointsize>
        <italic>true</italic>
       </font>
      </property>
@@ -180,6 +196,105 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
+    <widget class="QLabel" name="xmlsh_formula_l1">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>100</y>
+       <width>211</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Coordinate conversion Formular</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="xmlsh_formula_x">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>257</x>
+       <y>100</y>
+       <width>146</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>x</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="xmlsh_formula_l3">
+     <property name="geometry">
+      <rect>
+       <x>406</x>
+       <y>100</y>
+       <width>41</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>, y' = </string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="xmlsh_formula_y">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>445</x>
+       <y>100</y>
+       <width>146</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>y</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="xmlsh_formula_l4">
+     <property name="geometry">
+      <rect>
+       <x>600</x>
+       <y>100</y>
+       <width>41</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>]</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="xmlsh_formula_l2">
+     <property name="geometry">
+      <rect>
+       <x>218</x>
+       <y>101</y>
+       <width>41</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>[ x' = </string>
+     </property>
+    </widget>
+    <zorder>xmlsh_xml_label</zorder>
+    <zorder>xmlsh_sh_path</zorder>
+    <zorder>xmlsh_sh_label</zorder>
+    <zorder>xmlsh_xml_path</zorder>
+    <zorder>xmlsh_sh_browser</zorder>
+    <zorder>xmlsh_xml_browser</zorder>
+    <zorder>xmlsh_converter_but</zorder>
+    <zorder>xmlsh_status</zorder>
+    <zorder>xmlsh_progress</zorder>
+    <zorder>xmlsh_formula_l1</zorder>
+    <zorder>xmlsh_formula_x</zorder>
+    <zorder>xmlsh_formula_l3</zorder>
+    <zorder>xmlsh_formula_y</zorder>
+    <zorder>xmlsh_formula_l4</zorder>
+    <zorder>xmlsh_formula_l2</zorder>
    </widget>
    <widget class="QWidget" name="SHtoXML">
     <attribute name="title">
@@ -188,14 +303,14 @@
     <widget class="QToolButton" name="shxml_sh_browser">
      <property name="geometry">
       <rect>
-       <x>580</x>
+       <x>610</x>
        <y>20</y>
-       <width>41</width>
-       <height>31</height>
+       <width>31</width>
+       <height>21</height>
       </rect>
      </property>
      <property name="text">
-      <string> ...</string>
+      <string>...</string>
      </property>
     </widget>
     <widget class="QLineEdit" name="shxml_xml_path">
@@ -204,10 +319,10 @@
      </property>
      <property name="geometry">
       <rect>
-       <x>150</x>
-       <y>71</y>
-       <width>421</width>
-       <height>31</height>
+       <x>120</x>
+       <y>60</y>
+       <width>471</width>
+       <height>21</height>
       </rect>
      </property>
     </widget>
@@ -217,31 +332,31 @@
      </property>
      <property name="geometry">
       <rect>
-       <x>150</x>
+       <x>120</x>
        <y>20</y>
-       <width>421</width>
-       <height>31</height>
+       <width>471</width>
+       <height>21</height>
       </rect>
      </property>
     </widget>
     <widget class="QLabel" name="shxml_xml_label">
      <property name="geometry">
       <rect>
-       <x>20</x>
-       <y>80</y>
+       <x>10</x>
+       <y>60</y>
        <width>131</width>
-       <height>16</height>
+       <height>21</height>
       </rect>
      </property>
      <property name="text">
-      <string>XML output :</string>
+      <string>XML output</string>
      </property>
     </widget>
     <widget class="QLabel" name="shxml_status">
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>190</y>
+       <y>205</y>
        <width>611</width>
        <height>21</height>
       </rect>
@@ -249,7 +364,7 @@
      <property name="font">
       <font>
        <family>Tahoma</family>
-       <pointsize>10</pointsize>
+       <pointsize>13</pointsize>
        <italic>true</italic>
       </font>
      </property>
@@ -263,10 +378,10 @@
     <widget class="QToolButton" name="shxml_xml_browser">
      <property name="geometry">
       <rect>
-       <x>580</x>
-       <y>70</y>
-       <width>41</width>
-       <height>31</height>
+       <x>610</x>
+       <y>60</y>
+       <width>31</width>
+       <height>21</height>
       </rect>
      </property>
      <property name="text">
@@ -276,23 +391,23 @@
     <widget class="QLabel" name="shxml_sh_label">
      <property name="geometry">
       <rect>
-       <x>20</x>
-       <y>20</y>
-       <width>131</width>
-       <height>31</height>
+       <x>10</x>
+       <y>10</y>
+       <width>101</width>
+       <height>41</height>
       </rect>
      </property>
      <property name="text">
-      <string>Shapefiles Dir :</string>
+      <string>Shapefiles Dir</string>
      </property>
     </widget>
     <widget class="QPushButton" name="shxml_converter_but">
      <property name="geometry">
       <rect>
-       <x>230</x>
-       <y>130</y>
+       <x>241</x>
+       <y>154</y>
        <width>181</width>
-       <height>31</height>
+       <height>35</height>
       </rect>
      </property>
      <property name="text">
@@ -303,13 +418,97 @@
      <property name="geometry">
       <rect>
        <x>50</x>
-       <y>190</y>
+       <y>205</y>
        <width>561</width>
        <height>23</height>
       </rect>
      </property>
      <property name="value">
       <number>0</number>
+     </property>
+    </widget>
+    <widget class="QLabel" name="shxml_formula_l4">
+     <property name="geometry">
+      <rect>
+       <x>600</x>
+       <y>100</y>
+       <width>41</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>]</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="shxml_formula_y">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>445</x>
+       <y>100</y>
+       <width>146</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>y</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="shxml_formula_l1">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>100</y>
+       <width>211</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Coordinate conversion Formular</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="shxml_formula_x">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>257</x>
+       <y>100</y>
+       <width>146</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>x</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="shxml_formula_l2">
+     <property name="geometry">
+      <rect>
+       <x>218</x>
+       <y>101</y>
+       <width>41</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>[ x' = </string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="shxml_formula_l3">
+     <property name="geometry">
+      <rect>
+       <x>406</x>
+       <y>100</y>
+       <width>41</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>, y' = </string>
      </property>
     </widget>
     <zorder>shxml_sh_browser</zorder>
@@ -321,6 +520,12 @@
     <zorder>shxml_converter_but</zorder>
     <zorder>shxml_progress</zorder>
     <zorder>shxml_status</zorder>
+    <zorder>shxml_formula_l4</zorder>
+    <zorder>shxml_formula_y</zorder>
+    <zorder>shxml_formula_l1</zorder>
+    <zorder>shxml_formula_x</zorder>
+    <zorder>shxml_formula_l2</zorder>
+    <zorder>shxml_formula_l3</zorder>
    </widget>
   </widget>
  </widget>

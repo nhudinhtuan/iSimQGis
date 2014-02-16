@@ -1,8 +1,9 @@
 <RCC>
     <qresource prefix="/plugins/isimgis" >
-        <file>converter.png</file>
-        <file>open.png</file>
-        <file>add.png</file>
-        <file>delete.png</file>
+        <file>icons/converter.png</file>
+        <file>icons/open.png</file>
+        <file>icons/add.png</file>
+        <file>icons/delete.png</file>
+        <file>icons/notepad-icon.png</file>
     </qresource>
 </RCC>

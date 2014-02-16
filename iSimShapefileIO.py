@@ -1,4 +1,6 @@
-import shapefile, os
+import os
+from PyQt4.QtCore import *
+from qgis.core import *
 
 def enum(*sequential, **named):
     enums = dict(zip(sequential, range(len(sequential))), **named)
@@ -7,45 +9,52 @@ def enum(*sequential, **named):
 # Constants
 TYPE = enum('UNINODE', 'MULNODE', 'SEGMENT', 'LANE', 'CROSSING', 'BUSSTOP', 'LANEEDGE')
 TAGS = {TYPE.UNINODE: "uninode", TYPE.MULNODE: "mulnode", TYPE.SEGMENT: "segment", 
-        TYPE.LANE: "lane", TYPE.CROSSING: "crossing", TYPE.BUSSTOP: "busstop", TYPE.LANEEDGE: "laneegde"}
+        TYPE.LANE: "lane", TYPE.CROSSING: "crossing", TYPE.BUSSTOP: "busstop", TYPE.LANEEDGE: "laneedge"}
 SCHEMA = {}
-SCHEMA[TYPE.UNINODE] = [shapefile.POINT, [['id', 'N', '10']]]
-SCHEMA[TYPE.MULNODE] = [shapefile.POINT, [['id', 'N', '10']]]
-SCHEMA[TYPE.SEGMENT] = [shapefile.POLYGON, [['link-id', 'N', '10'], ['segmentID', 'N', '10']]]
-SCHEMA[TYPE.LANE] = [shapefile.POLYLINE, [['segment-id', 'N', '10'], ['laneID', 'N', '10']]]
-SCHEMA[TYPE.CROSSING] = [shapefile.POLYGON, [['segment-id', 'N', '10'], ['id', 'N', '10']]]
-SCHEMA[TYPE.BUSSTOP] = [shapefile.POINT, [['segment-id', 'N', '10'], ['id', 'N', '10']]]    
-SCHEMA[TYPE.LANEEDGE] = [shapefile.POLYLINE, [['segment-id', 'N', '10'], ['number', 'N', '10']]] 
+SCHEMA[TYPE.UNINODE] = [QGis.WKBPoint, [QgsField("id", QVariant.Int)]]
+SCHEMA[TYPE.MULNODE] = [QGis.WKBPoint, [QgsField("id", QVariant.Int)]] 
+SCHEMA[TYPE.SEGMENT] = [QGis.WKBPolygon, [QgsField("link-id", QVariant.Int), QgsField("segmentID", QVariant.Int)]]
+SCHEMA[TYPE.LANE]    = [QGis.WKBLineString, [QgsField("link-id", QVariant.Int), QgsField("segmentID", QVariant.Int), QgsField("laneID", QVariant.Int)]]
+SCHEMA[TYPE.CROSSING]= [QGis.WKBPolygon, [QgsField("link-id", QVariant.Int), QgsField("segmentID", QVariant.Int), QgsField("id", QVariant.Int)]]
+SCHEMA[TYPE.BUSSTOP] = [QGis.WKBPoint, [QgsField("link-id", QVariant.Int), QgsField("segmentID", QVariant.Int), QgsField("id", QVariant.Int)]]    
+SCHEMA[TYPE.LANEEDGE]= [QGis.WKBLineString, [QgsField("link-id", QVariant.Int), QgsField("segmentID", QVariant.Int), QgsField("number", QVariant.Int)]] 
 
 class ShapefileWriter:
     def __init__(self, path):
         self.path = path
         self.prefix = os.path.basename(path)
-        self.count = {}
-        self.shape = {}
-        for typeid in SCHEMA:
-            self.count[typeid] = 0
-            self.shape[typeid] = shapefile.Writer(SCHEMA[typeid][0])
-            for data in SCHEMA[typeid][1]:
-                 self.shape[typeid].field(data[0], data[1], data[2])
+        self.layer = {}
+
+        for typeid, tag in TAGS.iteritems():
+            fields = QgsFields()
+            for field in SCHEMA[typeid][1]:
+                fields.append(field)
+            dest = os.path.join(self.path, "%s_%s"%(self.prefix, tag))
+            crs = QgsCoordinateReferenceSystem(3168)
+            self.layer[typeid] = QgsVectorFileWriter(dest, "UTF-8", fields, SCHEMA[typeid][0], crs, "ESRI Shapefile")
+            if self.layer[typeid].hasError() != QgsVectorFileWriter.NoError:
+                QgsMessageLog.logMessage("Error: unable to create layer writer")
         
-    def addPoint(self, typeid, pos, info):       
-        if SCHEMA[typeid][0] == shapefile.POINT:
-            self.shape[typeid].point(pos[0], pos[1])
-            self.shape[typeid].record(*info)
-            self.count[typeid] += 1
+    def addPoint(self, typeid, point, attr):       
+        if SCHEMA[typeid][0] == QGis.WKBPoint:
+            fet = QgsFeature()
+            fet.setGeometry(QgsGeometry.fromPoint(point))
+            fet.setAttributes(attr)
+            self.layer[typeid].addFeature(fet)
 
-    def addPolygon(self, typeid, coordinates, info):      
-        if SCHEMA[typeid][0] == shapefile.POLYGON:
-            self.shape[typeid].poly(parts=[coordinates])
-            self.shape[typeid].record(*info)
-            self.count[typeid] += 1            
+    def addPolygon(self, typeid, coordinates, attr):      
+        if SCHEMA[typeid][0] == QGis.WKBPolygon:
+            fet = QgsFeature()
+            fet.setGeometry(QgsGeometry.fromPolygon([coordinates]))
+            fet.setAttributes(attr)
+            self.layer[typeid].addFeature(fet)          
 
-    def addPolyline(self, typeid, coordinates, info):     
-        if SCHEMA[typeid][0] == shapefile.POLYLINE:
-            self.shape[typeid].line(parts=[coordinates])
-            self.shape[typeid].record(*info)
-            self.count[typeid] += 1
+    def addPolyline(self, typeid, coordinates, attr):     
+        if SCHEMA[typeid][0] == QGis.WKBLineString:
+            fet = QgsFeature()
+            fet.setGeometry(QgsGeometry.fromPolyline(coordinates))
+            fet.setAttributes(attr)
+            self.layer[typeid].addFeature(fet)
 
     def save(self):
         if not os.path.exists(self.path):
@@ -53,45 +62,62 @@ class ShapefileWriter:
 
         #save to shapefiles 
         for typeid, tag in TAGS.iteritems():
-            if self.count[typeid] > 0:
-                print "Total %s: " % tag, self.count[typeid]
-                self.shape[typeid].save("%s/%s_%s"%(self.path, self.prefix, tag))
+            del self.layer[typeid]
+
 
 class ShapefileReader:
     def __init__(self, path):
         self.path = path
         self.prefix = os.path.basename(path)
-        self.shape = {}
-        self.cache = {}
+        self.layer = {}
+        self.data = {}
         for typeid, tag in TAGS.iteritems():
             filepath = os.path.join(self.path, "%s_%s.shp" % (self.prefix, tag))
             if os.path.isfile(filepath):
-                self.shape[typeid] = shapefile.Reader(filepath)
+                self.layer[typeid] = QgsVectorLayer(filepath, "%s_isim"%typeid, "ogr")
             else:
-                self.shape[typeid] = None
-            self.cache[typeid] = None
+                self.layer[typeid] = None
+            self.loadData(typeid)
+            
 
-    def getNodes(self, typeid):
-        nodes = {}
-        if self.shape[typeid] != None and SCHEMA[typeid][0] == shapefile.POINT:
-            for feature in self.shape[typeid].shapeRecords():
-                nodes[feature.record[0]] = feature.shape.points[0]
-        return nodes
+    def loadData(self, typeid):
+        self.data[typeid] = {}
+        if self.layer[typeid] == None:
+            return
 
-    def getCacheData(self, typeid):
-        if self.cache[typeid] != None:
-            return self.cache[typeid]
-        self.cache[typeid] = {}
-        if self.shape[typeid] != None:
-            for feature in self.shape[typeid].shapeRecords():
-                if feature.record[0] not in self.cache[typeid]:
-                    self.cache[typeid][feature.record[0]] = {}
-                self.cache[typeid][feature.record[0]][feature.record[1]] = feature.shape.points
-        return self.cache[typeid]
+        features = self.layer[typeid].getFeatures()
+        # load node
+        if  typeid == TYPE.UNINODE or typeid == TYPE.MULNODE:
+            for feature in features:
+                attr = feature.attributes()
+                self.data[typeid][attr[0]] = feature.geometry().asPoint()
+        elif typeid == TYPE.SEGMENT:
+            for feature in features:
+                attr = feature.attributes()
+                if attr[0] not in self.data[typeid]:
+                    self.data[typeid][attr[0]] = {}
+                self.data[typeid][attr[0]][attr[1]] = feature.geometry().asPolygon()
+        elif typeid == TYPE.LANE or typeid == TYPE.CROSSING or typeid == TYPE.LANEEDGE or typeid == TYPE.BUSSTOP:
+            for feature in features:
+                attr = feature.attributes()
+                if attr[0] not in self.data[typeid]:
+                    self.data[typeid][attr[0]] = {}
+                if attr[1] not in self.data[typeid][attr[0]]:
+                    self.data[typeid][attr[0]][attr[1]] = {}
 
-    def getCacheByFirstId(self, typeid, firstId):
-        data = self.getCacheData(typeid)
-        if firstId in data:
-            return data[firstId]
-        else:
-            return {}
+                if typeid == TYPE.BUSSTOP:
+                    self.data[typeid][attr[0]][attr[1]][attr[2]] = feature.geometry().asPoint()
+                elif typeid == TYPE.CROSSING:    
+                    self.data[typeid][attr[0]][attr[1]][attr[2]] = feature.geometry().asPolygon()
+                else:
+                    self.data[typeid][attr[0]][attr[1]][attr[2]] = feature.geometry().asPolyline()
+
+
+    def getNodes(self, typeId):
+        return self.data[typeId]
+
+    def getSegmentsByLinkId(self, linkId):
+        return self.data[TYPE.SEGMENT][linkId]
+
+    def getSegmentComponents(self, typeId, linkId, segmentId):
+        return self.data[typeId][linkId][segmentId]
